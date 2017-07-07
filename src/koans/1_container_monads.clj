@@ -10,9 +10,9 @@
 
 (def f2-set (as-set f2))
 
-(defn monad-bind [monad-value monad-function] (__ monad-function monad-value))
+(defn monad-bind [monad-value monad-function] (mapcat monad-function monad-value))
 
-(defn monad-result [x] __)
+(defn monad-result [x] (list x))
 
 (defn monad-compose [fn1 fn2] (fn [x] (-> x monad-result (monad-bind fn2) (monad-bind fn1))))
 
@@ -24,18 +24,18 @@
 
  "Do you think it is comp what you are doing? hm..."
  (= [9 10 11 99 100 101]
-    ((fn [x] (domonad sequence-m [a (__ x)
-                                 b (__ a)]
+    ((fn [x] (domonad sequence-m [a (f2 x)
+                                 b (f1 a)]
                      b)) 10))
 
  "Function composition is easy"
- (= __
+ (= '(1 2 3 3 4 5)
     ((with-monad sequence-m (m-chain [f2 f1])) 2))
 
  "Nil safety is easy"
- (= __
+ (= nil
     ((with-monad maybe-m (m-chain [f2 f1])) nil))
 
  "Different data types imply different container monads"
- (= __
+ (= #{ 1 2 3 4 5 }
     ((with-monad set-m (m-chain [f2-set f1-set])) 2)))

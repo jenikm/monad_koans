@@ -39,7 +39,7 @@
 
 (def alpha (one-of "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))
 (def whitespace (one-of " \t\n\r"))
-(def digit (one-of "__"))
+(def digit (one-of "0123456789"))
 
 (with-monad parser-m
 
@@ -97,11 +97,11 @@
 
 (meditations
  "Parsing a character means separating it from the rest"
- (= '(__ __)
+ (= '("m" "onad")
     ((is-char \m) "monad"))
 
  "Is there anything to return if there is no match?"
- (= __
+ (= nil
     ((is-char \m) "danom"))
 
  "creating new parsers is easy"
@@ -110,15 +110,16 @@
 
  "in fact, it is easy to write a parser for any string"
  (= '("foobar" " and baz")
-    ((match-string __) __))
+    ((match-string "foobar") "foobar and baz"))
 
  "parse me: maybe"
  (= '(nil "4abc")
-    ((optional ___) "4abc"))
+    ((optional (fn [a] nil)) "4abc"))
 
  "parse this or that"
  (= '("4" "abc")
-    ((match-one __ __) "4abc"))
+    ((match-one (fn [x] ((match-string "4") x)) (m-result nil)) "4abc"))
+
 
  "parse all or burn"
  (= '("15 birds in 5 firtrees" ", [...] fry them, boil them and eat them hot")

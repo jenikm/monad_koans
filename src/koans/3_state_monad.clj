@@ -9,25 +9,25 @@
    Returns the random and the next int which can be feed into the next call as from."
   (let [rand-between (fn [f t] (+ (rand-int (- t f)) f))
         random (rand-between from Integer/MAX_VALUE)]
-    [random (__ random)]))
+    [random (inc random)]))
 
 (meditations
  "Dynamic balance means lots of movement but no change
 Realise that the increment and decrement functions are monadic values for the state monad"
- (= '([__ __] 5)
+ (= '(["incremented!" "decremented!"] 5)
     ((domonad state-m [a increment
                        b decrement]
               [a b]) 5))
 
  "You are allowed to peek"
- (= '([__ __ __] 5)
+ (= '(["incremented!" 6 "decremented!"] 5)
     ((domonad state-m [a increment
                        x (fetch-state)
                        b decrement]
               [a x b]) 5))
 
  "Why not take controll even?"
- (= '([__ __ __] __)
+ (= '(["incremented!" 6 "decremented!"] 42)
     ((domonad state-m [a increment
                        x (set-state 43)
                        b decrement]
@@ -35,9 +35,9 @@ Realise that the increment and decrement functions are monadic values for the st
 
  "Let's generate a strictly monotonically increasing sequence with three elements
   Contemplate how the plumbing between the functions is hidden"
- (let [[inc-seq state] ((domonad state-m [rnd1 __
-                                          rnd2 __
-                                          rnd3 __]
+ (let [[inc-seq state] ((domonad state-m [rnd1 next-rand-int
+                                          rnd2 next-rand-int
+                                          rnd3 next-rand-int]
                                  (list rnd1 rnd2 rnd3)) 10)]
    (and (< (first inc-seq) (second inc-seq))
         (< (second inc-seq) (last inc-seq))
