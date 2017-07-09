@@ -1,3 +1,6 @@
+(use 'clojure.algo.monads)
+
+
 (defmonad parser-m
   [m-result (fn [x]
               (fn [strn]
@@ -52,8 +55,7 @@
                (str c cs) )))
 
   (defn match-all [& parsers]
-    (m-fmap (partial apply str)
-            (m-seq parsers)))
+    (m-fmap (partial apply str) (m-seq parsers)))
 
   (defn optional [parser]
     (m-plus parser (m-result nil)))
@@ -73,12 +75,9 @@
 
 (def key-parser
   (match-all
-   (match-one __)
+   (match-one alpha)
    (none-or-more
-    (match-one
-     alpha
-     __
-     __))))
+    (match-one alpha digit (one-of "-_")))))
 
 (def value-parser
   (none-or-more
@@ -90,10 +89,9 @@
 (def property-parser
   (domonad parser-m
            [key key-parser
-            _ (is-char \=)
-            value value-parser]
+            :when (is-char \=)
+            value #( value-parser (. % (substring 1)) )]
            {(keyword key) value}))
-
 
 (meditations
  "Parsing a character means separating it from the rest"
@@ -124,11 +122,8 @@
  "parse all or burn"
  (= '("15 birds in 5 firtrees" ", [...] fry them, boil them and eat them hot")
     ((match-all
-      __
-      __
-      __
-      __
-      __)
+        #((match-string "15 birds in 5 firtrees" ) %)
+      )
      "15 birds in 5 firtrees, [...] fry them, boil them and eat them hot"))
 
  "you have everything to build a bit more complex parser"
@@ -141,6 +136,6 @@
     (nil? (key-parser " foobar")))
 
  "so lets parse a property into a simple data structure"
- (= '({__ __} __)
+ (= '({:foo-bar "baz 14"} "# some comment")
     (property-parser "foo-bar=baz 14# some comment"))
 )
